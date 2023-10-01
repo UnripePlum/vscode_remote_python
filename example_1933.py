@@ -70,6 +70,76 @@ class Range_node:
             return self
         return self.node_R
     
+    def delete_max(self):
+        if(self.node_R == None):
+            return self
+
+        if(self.node_R.node_R == None):
+            max_node = self.node_R
+            self.node_R = self.node_R.node_L
+            print(max_node.left, max_node.height, max_node.right)
+            return max_node
+        else :
+            return self.node_R.delete_max()
+
+    def delete_min(self):
+        if(self.node_L == None):
+            return self
+
+        if(self.node_L.node_L == None):
+            min_node = self.node_L
+            self.node_L = self.node_L.node_R
+            print(min_node.left, min_node.height, min_node.right)
+            return min_node
+        else :
+            return self.node_L.delete_min()
+
+    def pop_nearby_min(self):
+        if(self.node_L == None):
+            return None
+        else :
+            return self.node_L.delete_max()
+    
+    def pop_nearby_max(self):
+        if(self.node_R == None):
+            return None
+        else :
+            return self.node_R.delete_min()
+    
+    def merge_nearby_max(self):
+        nearby_max_node = self.get_nearby_max()
+
+        if(nearby_max_node == None):
+            return
+
+        if(self.height == nearby_max_node.height
+           and self.right == nearby_max_node.left):
+            self.right = nearby_max_node.right
+            self.pop_nearby_max()
+
+    def merge_nearby_min(self):
+        nearby_min_node = self.get_nearby_min()
+
+        if(nearby_min_node == None):
+            return
+
+        if(self.height == nearby_min_node.height
+           and self.left == nearby_min_node.right):
+            self.left = nearby_min_node.left
+            self.pop_nearby_min()
+
+    def get_nearby_min(self):
+        if(self.node_L == None):
+            return None
+        else :
+            return self.node_L.get_max()
+
+    def get_nearby_max(self):
+        if(self.node_R == None):
+            return None
+        else :
+            return self.node_R.get_min()
+    
     def add(self, left, height, right):
 
         if(left == right):
@@ -96,31 +166,43 @@ class Range_node:
             self.node_L.add(left, height, right)
             return
         
-        
+        self_left_final = max(self.left, left)
+        self_right_final = min(self.right, right)
+        self_height_final = max(self.height, height)
+
+
 
         if(self.node_L == None):
-            if(min(self.left, left) != max(self.left, left)):
+            if(self.left != left):
+                
                 self.set_node_L(Range_node(min(self.left, left), 
                         self.height if min(self.left, left) == self.left else height,
                         max(self.left, left)))
         else :
+            
             self.node_L.add(min(self.left, left), 
                         self.height if min(self.left, left) == self.left else height,
                         max(self.left, left))
         
         if(self.node_R == None):
             if(min(self.right, right) != max(self.right, right)):
+                
                 self.set_node_R(Range_node(min(self.right, right), 
                         self.height if max(self.right, right) == self.right else height,
                         max(self.right, right)))
         else :
+
             self.node_R.add(min(self.right, right), 
                         self.height if max(self.right, right) == self.right else height,
                         max(self.right, right))
         
-        self.left = max(self.left, left)
-        self.right = min(self.right, right)
-        self.height = max(self.height, height)
+        self.left = self_left_final
+        self.right = self_right_final
+        self.height = self_height_final
+
+        self.merge_nearby_max()
+        self.merge_nearby_min()
+        
     
     def add_node(self, left, height, right):
         self.add(left, height, right)
